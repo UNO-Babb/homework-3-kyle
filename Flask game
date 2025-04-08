@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Race to the Finish</title>
+    <style>
+        .board {
+            display: flex;
+            gap: 5px;
+            margin: 20px 0;
+        }
+        .cell {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #000;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+        }
+        .player1 { background: red; color: white; }
+        .player2 { background: blue; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Race to the Finish</h1>
+    <p>{{ message }}</p>
+
+    <div class="board">
+        {% for i in range(board_size) %}
+            <div class="cell">
+                {% if positions[0] == i and positions[1] == i %}
+                    <span class="player1">P1</span><br><span class="player2">P2</span>
+                {% elif positions[0] == i %}
+                    <span class="player1">P1</span>
+                {% elif positions[1] == i %}
+                    <span class="player2">P2</span>
+                {% else %}
+                    {{ i + 1 }}
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <p>
+        <a href="{{ url_for('roll') }}">🎲 Roll Dice</a> |
+        <a href="{{ url_for('save') }}">💾 Save</a> |
+        <a href="{{ url_for('load') }}">📂 Load</a>
+    </p>
+</body>
+</html>
