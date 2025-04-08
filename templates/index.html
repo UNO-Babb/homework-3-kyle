@@ -3,59 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hexagon Tile Game</title>
+    <title>Car Race Game</title>
     <style>
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
             margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            padding: 0;
         }
-        #board {
-            display: grid;
-            grid-template-columns: repeat(10, 60px);
-            grid-template-rows: repeat(10, 52px);
-            gap: 2px;
+
+        h1 {
+            color: #333;
         }
-        .hex {
-            width: 60px;
-            height: 52px;
-            background-color: lightgray;
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            transition: background-color 0.2s;
+
+        .track {
+            width: 80%;
+            height: 200px;
+            margin: 50px auto;
+            position: relative;
+            background: linear-gradient(90deg, #dfe9f3, #ffffff);
+            border-radius: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border: 5px solid #666;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .lane {
+            position: absolute;
+            width: 100%;
+            height: 50px;
+            background-color: #cccccc;
+            z-index: 0;
+            top: 75px; /* Place cars on the same lane */
+            border-radius: 10px;
+        }
+
+        .car {
+            position: absolute;
+            width: 40px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: left 0.5s ease;
+        }
+
+        .red-car {
+            background-color: red;
+            z-index: 1;
+        }
+
+        .blue-car {
+            background-color: blue;
+            z-index: 1;
+        }
+
+        .finish-line {
+            position: absolute;
+            width: 5px;
+            height: 100%;
+            background-color: transparent;
+            right: 0;
+            top: 0;
+            box-shadow: 1px 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .button-container {
+            margin-top: 30px;
+        }
+
+        button {
+            font-size: 18px;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .reset-button {
+            background-color: #f44336;
+        }
+
+        .reset-button:hover {
+            background-color: #e53935;
+        }
+
+        .winner {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
+    <h1>Car Race Game</h1>
+    <p><strong>Finish Line:</strong> {{ finish_line }} spaces</p>
 
-<div id="board">
-    <!-- Hexagonal tiles will be added here on clicks -->
-</div>
+    <!-- The Artistic Track -->
+    <div class="track">
+        <!-- Lane for Both Cars -->
+        <div class="lane"></div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function() {
-        // Create an empty board of hex tiles
-        for (let i = 0; i < 100; i++) {
-            const hexTile = $('<div class="hex"></div>');
-            hexTile.data("clicked", false);  // Track if a tile has been clicked
-            $('#board').append(hexTile);
-        }
+        <!-- Player 1 (Red Car) -->
+        <div class="car red-car" style="left: {{ (player1_position / finish_line) * 100 }}%;">
+            🚗
+        </div>
 
-        // Add color to hex tiles on click
-        $('#board').on('click', '.hex', function() {
-            if (!$(this).data("clicked")) {  // Only allow one click per tile
-                $.getJSON('/add_tile', function(data) {
-                    $(this).css('background-color', data.color);
-                    $(this).data("clicked", true);  // Mark as clicked
-                }.bind(this));
-            }
-        });
-    });
-</script>
+        <!-- Player 2 (Blue Car) -->
+        <div class="car blue-car" style="left: {{ (player2_position / finish_line) * 100 }}%;">
+            🚗
+        </div>
 
+        <!-- Optional Finish Line (Not visible anymore) -->
+        <!-- <div class="finish-line"></div> -->
+    </div>
+
+    <p><strong>Player 1 Position:</strong> {{ player1_position }}</p>
+    <p><strong>Player 2 Position:</strong> {{ player2_position }}</p>
+
+    <div class="button-container">
+        <h3>Control Buttons</h3>
+        <a href="{{ url_for('move_player1') }}"><button>Move Player 1</button></a>
+        <a href="{{ url_for('move_player2') }}"><button>Move Player 2</button></a>
+        <a href="{{ url_for('reset_game') }}"><button class="reset-button">Reset Game</button></a>
+    </div>
+
+    {% if winner %}
+        <div class="winner" style="color: {% if winner == 'Player 1' %}red{% else %}blue{% endif %};">
+            <h2>{{ winner }} Wins!</h2>
+        </div>
+    {% endif %}
 </body>
 </html>
+

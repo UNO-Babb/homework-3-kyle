@@ -1,73 +1,57 @@
-#Example Flask App for a hexaganal tile game
-#Logic is in this python file
-
-from flask import Flask, render_template, request, redirect, url_for, session
 import random
-import json
-import os
+from flask import Flask, render_template, redirect, url_for, session
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'
-SAVE_FILE = 'savegame.json'
+app.secret_key = 'your_secret_key_here'  # Set a secret key for session management
 
-BOARD_SIZE = 20
+# Initialize game state constants
+finish_line = 100  # Total number of spaces to finish the race
+
+def roll_dice():
+    """Simulate a dice roll, returning a random number between 1 and 6."""
+    return random.randint(1, 6)
 
 @app.route('/')
 def index():
-    if 'positions' not in session:
-        session['positions'] = [0, 0]
-        session['current_player'] = 0
-        session['message'] = "Player 1's turn"
+    # Retrieve player positions from session or initialize them
+    player1_position = session.get('player1_position', 0)
+    player2_position = session.get('player2_position', 0)
 
-    return render_template('index.html',
-                           positions=session['positions'],
-                           current_player=session['current_player'],
-                           message=session['message'],
-                           board_size=BOARD_SIZE)
+    # Determine winner
+    winner = None
+    if player1_position >= finish_line:
+        winner = "Player 1"
+    elif player2_position >= finish_line:
+        winner = "Player 2"
 
-@app.route('/roll')
-def roll():
-    positions = session.get('positions', [0, 0])
-    current_player = session.get('current_player', 0)
+    return render_template('index.html', 
+                           player1_position=player1_position, 
+                           player2_position=player2_position, 
+                           finish_line=finish_line, 
+                           winner=winner)
 
-    roll = random.randint(1, 6)
-    positions[current_player] += roll
-
-    if positions[current_player] >= BOARD_SIZE:
-        positions[current_player] = BOARD_SIZE
-        session['message'] = f"Player {current_player + 1} wins!"
-    else:
-        current_player = 1 - current_player
-        session['message'] = f"Player {current_player + 1}'s turn"
-
-    session['positions'] = positions
-    session['current_player'] = current_player
-
+@app.route('/move_player1')
+def move_player1():
+    player1_position = session.get('player1_position', 0)
+    if player1_position < finish_line:
+        player1_position += roll_dice()  # Move player 1 by a dice roll
+    session['player1_position'] = player1_position
     return redirect(url_for('index'))
 
-@app.route('/save')
-def save():
-    data = {
-        'positions': session.get('positions', [0, 0]),
-        'current_player': session.get('current_player', 0)
-    }
-    with open(SAVE_FILE, 'w') as f:
-        json.dump(data, f)
-    session['message'] = "Game Saved!"
+@app.route('/move_player2')
+def move_player2():
+    player2_position = session.get('player2_position', 0)
+    if player2_position < finish_line:
+        player2_position += roll_dice()  # Move player 2 by a dice roll
+    session['player2_position'] = player2_position
     return redirect(url_for('index'))
 
-@app.route('/load')
-def load():
-    if os.path.exists(SAVE_FILE):
-        with open(SAVE_FILE, 'r') as f:
-            data = json.load(f)
-            session['positions'] = data['positions']
-            session['current_player'] = data['current_player']
-            session['message'] = f"Player {data['current_player'] + 1}'s turn (loaded)"
-    else:
-        session['message'] = "No saved game found."
+@app.route('/reset')
+def reset_game():
+    # Reset game state in the session
+    session['player1_position'] = 0
+    session['player2_position'] = 0
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)
-
